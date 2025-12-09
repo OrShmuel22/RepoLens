@@ -103,11 +103,12 @@ class OllamaLLMProvider(BaseLLMProvider):
         # Import ollama SDK
         try:
             import ollama
-            self.ollama = ollama
 
-            # Set host if custom
+            # Create client with custom host if needed
             if self.host != 'http://localhost:11434':
-                self.ollama.Client(host=self.host)
+                self.client = ollama.Client(host=self.host)
+            else:
+                self.client = ollama
         except ImportError:
             raise ImportError("ollama package not installed. Run: pip install ollama")
 
@@ -123,7 +124,7 @@ class OllamaLLMProvider(BaseLLMProvider):
             if max_tokens:
                 options["num_predict"] = max_tokens
 
-            response = self.ollama.generate(
+            response = self.client.generate(
                 model=self.model,
                 prompt=prompt,
                 options=options
@@ -143,7 +144,7 @@ class OllamaLLMProvider(BaseLLMProvider):
             if max_tokens:
                 options["num_predict"] = max_tokens
 
-            for chunk in self.ollama.generate(
+            for chunk in self.client.generate(
                 model=self.model,
                 prompt=prompt,
                 options=options,
@@ -158,7 +159,7 @@ class OllamaLLMProvider(BaseLLMProvider):
         """Check if Ollama is responsive."""
         try:
             # Try to list models
-            self.ollama.list()
+            self.client.list()
             return True
         except Exception as e:
             logger.warning(f"Ollama health check failed: {e}")

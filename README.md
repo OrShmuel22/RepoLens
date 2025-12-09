@@ -131,6 +131,38 @@ repolens . --output onboarding-guide.md
 | 🔍 **Content Analysis** | Intelligent code summarization |
 | ⚙️ **Configurable** | Extensive options for customization |
 | 🚀 **Fast** | Efficient processing even for large repos |
+| 🤖 **Flexible AI Models** | Use local (free) or cloud AI models |
+
+## 🤖 AI Models (Simple Explanation)
+
+RepoLens uses two types of AI:
+1. **Embedding Models** - Convert your code to searchable "fingerprints" 🔍
+2. **LLM Models** - Read code and write human-friendly summaries 💬
+
+### Default Setup (Free & Private)
+Works out of the box with local models:
+- ✅ Completely free
+- ✅ Runs on your computer (private)
+- ✅ No API keys needed
+
+### Upgrade to Cloud Models (Better Quality)
+Switch to OpenAI or Anthropic for professional-quality results:
+- ⭐ Better search accuracy
+- ⭐ More detailed summaries
+- 💰 Small cost ($0.50-2 per 100k lines)
+
+### 📊 Popular Models
+
+| Use Case | Recommended Setup | Cost |
+|----------|------------------|------|
+| **Learning/Testing** | Local: `nomic-embed-text` + `llama3.2:3b` | Free |
+| **Professional** | Cloud: `text-embedding-3-small` + `gpt-4o-mini` | ~$0.60/100k lines |
+| **Best Quality** | Cloud: `text-embedding-3-large` + `claude-3-5-sonnet` | ~$10/100k lines |
+| **Best Value** | Mixed: `nomic-embed-text` (local) + `gpt-4o-mini` (cloud) | ~$0.50/100k lines |
+
+**New to AI models?** Check out our [Beginner-Friendly Guide](docs/MODEL_CONFIGURATION.md) 📖
+
+**Want details?** See the [Popular Models Comparison](docs/POPULAR_MODELS.md) 📊
 
 ## 📊 Output Example
 

@@ -3,7 +3,7 @@ Base classes for embedding and LLM providers.
 """
 
 from abc import ABC, abstractmethod
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 import logging
 
 logger = logging.getLogger(__name__)
