@@ -189,43 +189,6 @@ my-project/
 
 Main application file containing core business logic...
 ```
-
-## 🎨 Tips for Maximum GitHub Stars
-
-### 1. **Add These Files** (I can help create them):
-- `CONTRIBUTING.md` - Encourage contributions
-- `CHANGELOG.md` - Show active development
-- `CODE_OF_CONDUCT.md` - Build a welcoming community
-- `.github/ISSUE_TEMPLATE/` - Make it easy to report bugs
-- `.github/PULL_REQUEST_TEMPLATE.md` - Streamline contributions
-
-### 2. **Social Media & Promotion**:
-- Share on Twitter/X with hashtags: #Python #AI #DeveloperTools
-- Post on Reddit: r/Python, r/programming, r/coolgithubprojects
-- Submit to Product Hunt when you have 100+ stars
-- Write a blog post or tutorial
-
-### 3. **Improve Discoverability**:
-- Add GitHub topics: `ai`, `codebase-analysis`, `developer-tools`, `llm`, `chatgpt`
-- Create a demo video/GIF showing the tool in action
-- Add to awesome lists (awesome-python, awesome-ai-tools)
-
-### 4. **Engage the Community**:
-- Respond quickly to issues
-- Accept good PRs promptly
-- Create "good first issue" labels
-- Add a Discussions tab for Q&A
-
-## 🤝 Contributing
-
-We love contributions! Whether it's:
-- 🐛 Bug reports
-- 💡 Feature requests
-- 📖 Documentation improvements
-- 🔧 Code contributions
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
 ## 📝 License
 
 MIT License - see [LICENSE](LICENSE) file for details.
