@@ -1,7 +1,40 @@
 # Codebase Librarian Configuration
 # All settings are centralized here for production deployment
 
-# Ollama Configuration
+# Provider Configuration
+# Choose your AI provider: ollama, openai, anthropic
+providers:
+  # Embedding provider (for semantic search)
+  embedding:
+    provider: "ollama"  # Options: ollama, openai
+    model: "nomic-embed-text"  # Model name
+    # Provider-specific settings
+    ollama:
+      host: "http://ollama:11434"
+    openai:
+      # API key via environment variable: OPENAI_API_KEY
+      model: "text-embedding-3-small"  # or text-embedding-3-large (1536 dims)
+
+  # LLM provider (for code summarization)
+  llm:
+    provider: "ollama"  # Options: ollama, openai, anthropic
+    model: "llama3.2:3b"  # Model name
+    temperature: 0.7
+    max_tokens: 2048
+    # Provider-specific settings
+    ollama:
+      host: "http://ollama:11434"
+      keep_alive: "10m"
+      max_loaded_models: 2
+      flash_attention: false
+    openai:
+      # API key via environment variable: OPENAI_API_KEY
+      model: "gpt-4o-mini"  # or gpt-4o for better quality
+    anthropic:
+      # API key via environment variable: ANTHROPIC_API_KEY
+      model: "claude-3-5-sonnet-20241022"  # or claude-3-5-haiku-20241022 for speed
+
+# Legacy Ollama Configuration (deprecated, use providers above)
 ollama:
   host: "http://ollama:11434"
   embedding_model: "nomic-embed-text"

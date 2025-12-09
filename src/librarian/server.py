@@ -11,8 +11,9 @@ from .embeddings import EmbeddingEngine
 from .cache import EmbeddingCache, FileHashCache
 
 # Initialize core components with caching
-db = LanceDBManager()
 engine = EmbeddingEngine(use_cache=True)  # Singleton with caching enabled
+db = LanceDBManager()
+db.set_dimension(engine.dimension)  # Set correct dimension from embedding model
 mcp = FastMCP("RepoLens")
 
 # Watcher state

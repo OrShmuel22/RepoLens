@@ -15,12 +15,12 @@ def _load_config() -> dict[str, Any]:
         Path("/app/config.yaml"),  # Docker
         Path(__file__).parent.parent.parent / "config.yaml",  # Local dev
     ]
-    
+
     for path in config_paths:
         if path.exists():
             with open(path) as f:
                 return yaml.safe_load(f)
-    
+
     return {}
 
 _config = _load_config()
@@ -46,9 +46,21 @@ CACHE_DIR = _get("cache", "dir", os.path.join(os.getcwd(), ".cache"), "CACHE_DIR
 # Database
 DB_TABLE_NAME = _get("database", "table_name", "codebase_chunks")
 
-# Ollama
-EMBEDDING_MODEL = _get("ollama", "embedding_model", "nomic-embed-text")
-LLM_MODEL = _get("ollama", "llm_model", "qwen3:8b")
+# Provider Configuration
+EMBEDDING_PROVIDER = _get("providers", "embedding", {}).get("provider", "ollama")
+EMBEDDING_MODEL = _get("providers", "embedding", {}).get("model", "nomic-embed-text")
+LLM_PROVIDER = _get("providers", "llm", {}).get("provider", "ollama")
+LLM_MODEL = _get("providers", "llm", {}).get("model", "llama3.2:3b")
+LLM_TEMPERATURE = _get("providers", "llm", {}).get("temperature", 0.7)
+LLM_MAX_TOKENS = _get("providers", "llm", {}).get("max_tokens", 2048)
+
+# Provider-specific settings
+OLLAMA_HOST = _get("providers", "embedding", {}).get("ollama", {}).get("host",
+                   _get("ollama", "host", "http://localhost:11434"))
+
+# Legacy Ollama config (for backward compatibility)
+OLLAMA_EMBEDDING_MODEL = _get("ollama", "embedding_model", "nomic-embed-text")
+OLLAMA_LLM_MODEL = _get("ollama", "llm_model", "qwen3:8b")
 
 # Performance
 MAX_WORKERS = _get("performance", "max_workers", 4, "MAX_WORKERS")

@@ -31,28 +31,108 @@ class CodeChunk(LanceModel):
 class LanceDBManager:
     """
     Optimized LanceDB manager with:
+    - Dynamic vector dimensions based on embedding model
     - Larger batch sizes (500 instead of 100)
     - Vector index optimization
     - Efficient bulk operations
     - Smart upsert with deduplication
     """
-    
-    def __init__(self, db_path: str = LANCEDB_PATH):
+
+    def __init__(self, db_path: str = LANCEDB_PATH, dimension: Optional[int] = None):
         self.db = lancedb.connect(db_path)
-        self.table_name = DB_TABLE_NAME
+        self.base_table_name = DB_TABLE_NAME
+        self.dimension = dimension
+        self._code_chunk_model = None
         self._init_table()
         self._index_created = False
 
+    def set_dimension(self, dimension: int):
+        """
+        Set the vector dimension and reinitialize the table.
+        Creates dimension-specific table names (e.g., codebase_chunks_768).
+
+        Args:
+            dimension: Vector dimension from embedding model
+        """
+        if self.dimension != dimension:
+            logger.info(f"Setting vector dimension to {dimension}")
+            self.dimension = dimension
+            self._code_chunk_model = create_code_chunk_model(dimension)
+            self._init_table()
+
+    @property
+    def code_chunk_model(self):
+        """Get the CodeChunk model (creates default if not set)."""
+        if self._code_chunk_model is None:
+            self._code_chunk_model = create_code_chunk_model(self.dimension or 768)
+        return self._code_chunk_model
+
+    @property
+    def table_name(self) -> str:
+        """Get dimension-specific table name."""
+        if self.dimension and self.dimension != 768:
+            return f"{self.base_table_name}_{self.dimension}"
+        return self.base_table_name
+
     def _init_table(self):
+        """Initialize table with current dimension."""
         if self.table_name not in self.db.table_names():
-            self.db.create_table(self.table_name, schema=CodeChunk)
+            logger.info(f"Creating new table: {self.table_name} (dimension: {self.dimension or 768})")
+            self.db.create_table(self.table_name, schema=self.code_chunk_model)
+            # Store dimension in table metadata
+            self._save_metadata()
+        else:
+            # Verify dimension matches
+            stored_dim = self._load_metadata()
+            if stored_dim and self.dimension and stored_dim != self.dimension:
+                logger.warning(
+                    f"Dimension mismatch! Table {self.table_name} has dimension {stored_dim}, "
+                    f"but provider expects {self.dimension}. "
+                    f"You may need to run 'librarian reindex' to recreate the index."
+                )
+
         self.table = self.db.open_table(self.table_name)
-        
+
         # Create FTS index on content
         try:
             self.table.create_fts_index("content")
         except Exception:
             pass  # Might already exist or not supported
+
+    def _save_metadata(self):
+        """Save dimension metadata to a separate metadata table."""
+        try:
+            metadata = {
+                "table_name": self.table_name,
+                "dimension": self.dimension or 768,
+            }
+            # Store in a simple metadata table
+            if "_metadata" not in self.db.table_names():
+                self.db.create_table("_metadata", data=[metadata])
+            else:
+                meta_table = self.db.open_table("_metadata")
+                # Delete old entry for this table
+                try:
+                    safe_name = self.table_name.replace("'", "''")
+                    meta_table.delete(f"table_name = '{safe_name}'")
+                except Exception:
+                    pass
+                meta_table.add([metadata])
+        except Exception as e:
+            logger.debug(f"Could not save metadata: {e}")
+
+    def _load_metadata(self) -> Optional[int]:
+        """Load dimension from metadata."""
+        try:
+            if "_metadata" in self.db.table_names():
+                meta_table = self.db.open_table("_metadata")
+                safe_name = self.table_name.replace("'", "''")
+                results = meta_table.search().where(f"table_name = '{safe_name}'").limit(1).to_list()
+                if results:
+                    return results[0].get("dimension")
+        except Exception as e:
+            logger.debug(f"Could not load metadata: {e}")
+        return None
 
     def _ensure_vector_index(self):
         """
@@ -61,14 +141,14 @@ class LanceDBManager:
         """
         if self._index_created:
             return
-            
+
         try:
             row_count = self.table.count_rows()
             if row_count > 1000:  # Only create index for larger tables
                 # IVF-PQ index for faster approximate search
                 # num_partitions should be sqrt(n) approximately
                 num_partitions = min(256, max(8, int(row_count ** 0.5)))
-                
+
                 self.table.create_index(
                     metric="L2",
                     num_partitions=num_partitions,
@@ -91,28 +171,28 @@ class LanceDBManager:
         """Delete old chunks for file and insert new ones."""
         if not chunks:
             return
-        
+
         # Sanitize filepath for query
         safe_path = filepath.replace("'", "''")
         try:
             self.table.delete(f"filepath = '{safe_path}'")
         except Exception:
             pass
-        
+
         self.add_chunks_batch(chunks)
 
     def upsert_files_batch(self, files_chunks: Dict[str, List[CodeChunk]]):
         """Batch upsert for multiple files."""
         if not files_chunks:
             return
-        
+
         for fp in files_chunks:
             safe_path = fp.replace("'", "''")
             try:
                 self.table.delete(f"filepath = '{safe_path}'")
             except Exception:
                 pass
-        
+
         all_chunks = [c for chunks in files_chunks.values() for c in chunks]
         if all_chunks:
             self.add_chunks_batch(all_chunks)
@@ -120,13 +200,13 @@ class LanceDBManager:
     def search(self, query_vector: List[float], limit: int = 10, file_type: Optional[str] = None):
         """Vector search with optional filtering."""
         self._ensure_vector_index()
-        
+
         search_builder = self.table.search(query_vector).limit(limit)
         if file_type:
             safe_type = file_type.replace("'", "''")
             search_builder = search_builder.where(f"file_type = '{safe_type}'")
         return search_builder.to_list()
-    
+
     def search_hybrid(self, query: str, limit: int = 10):
         """Hybrid search combining vector and full-text search."""
         try:
@@ -186,7 +266,7 @@ class LanceDBManager:
             results = self.table.search().limit(1000000).select(["filepath", "is_architecture_node"]).to_list()
             files = {r['filepath'] for r in results}
             arch_chunks = sum(1 for r in results if r.get('is_architecture_node'))
-            
+
             return {
                 "total_chunks": len(results),
                 "total_files": len(files),
