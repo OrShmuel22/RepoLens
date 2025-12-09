@@ -1,0 +1,45 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama_server
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_NUM_PARALLEL=2
+      - OLLAMA_KEEP_ALIVE=10m
+      - OLLAMA_MAX_LOADED_MODELS=2
+      - OLLAMA_FLASH_ATTENTION=0
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+    restart: unless-stopped
+
+  librarian:
+    build: .
+    container_name: codebase_librarian
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    volumes:
+      - ${HOST_CODE_DIR:-./demo_project}:/app/codebase:ro
+      - librarian_data:/data
+      - ./config.yaml:/app/config.yaml:ro
+    ports:
+      - "3333:3333"
+    restart: unless-stopped
+    command: ["watch", "/app/codebase"]
+
+volumes:
+  ollama_data:
+  librarian_data:

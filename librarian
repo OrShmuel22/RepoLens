@@ -1,0 +1,44 @@
+#!/bin/bash
+# =============================================================================
+# Codebase Librarian - Easy CLI
+# =============================================================================
+#
+# QUICK START:
+#   ./librarian              # Interactive menu (recommended)
+#   ./librarian search "X"   # Search for code
+#   ./librarian index        # Index your codebase
+#   ./librarian status       # View what's indexed
+#
+# SHORTCUTS:
+#   ./librarian -s "query"   # Quick search
+#   ./librarian -i           # Quick index
+#
+# MORE OPTIONS:
+#   ./librarian --help       # Full help
+#   ./librarian services     # Manage services
+#   ./librarian diff         # View changes
+#   ./librarian watch        # Auto-reindex on changes
+#
+# =============================================================================
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Check if docker-compose is running
+if ! docker compose ps 2>/dev/null | grep -q "codebase_librarian.*Up"; then
+    echo -e "${YELLOW}⚠️  Container is not running. Starting...${NC}"
+    docker compose up -d
+    echo -e "${GREEN}✓ Container started${NC}"
+    echo ""
+    # Wait a moment for services to initialize
+    sleep 2
+fi
+
+# Run command in container
+docker exec -it codebase_librarian python src/cli/runner.py "$@"

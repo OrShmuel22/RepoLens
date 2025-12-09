@@ -1,0 +1,77 @@
+# Codebase Librarian Configuration
+# All settings are centralized here for production deployment
+
+# Ollama Configuration
+ollama:
+  host: "http://ollama:11434"
+  embedding_model: "nomic-embed-text"
+  llm_model: "llama3.2:3b"
+  # Parallel requests (match OLLAMA_NUM_PARALLEL in docker)
+  num_parallel: 2
+  max_concurrent: 2
+  keep_alive: "10m"
+  max_loaded_models: 2
+  flash_attention: false
+
+# Embedding Configuration
+# CRITICAL: nomic-embed-text has 2048 TOKEN limit
+# Code tokenizes at 2-3 chars/token, not 4!
+embedding:
+  # Max characters per embedding text (1500 chars ≈ 600 tokens)
+  max_text_length: 1500
+  batch_size: 50
+  requests_per_second: 8.0
+  max_retries: 5
+  backoff_max_seconds: 16
+
+# Chunking Configuration
+# Semantic chunking with context headers
+chunking:
+  # Lines per chunk (15 lines ≈ 750 chars code + 200 char header)
+  chunk_size_lines: 15
+  overlap_lines: 3
+  min_chunk_chars: 50
+  max_context_stack_depth: 10
+
+# Supported Languages
+# Strategy pattern allows adding new languages easily
+# To add a language: create src/librarian/chunking/<lang>.py and register in factory.py
+languages:
+  supported:
+    - name: "C#"
+      extensions: [".cs", ".csx"]
+    # Future languages (not yet implemented):
+    # - name: "Python"
+    #   extensions: [".py", ".pyw"]
+    # - name: "TypeScript"
+    #   extensions: [".ts", ".tsx"]
+    # - name: "Java"
+    #   extensions: [".java"]
+
+# Database Configuration
+database:
+  path: "/data/lancedb"
+  table_name: "codebase_chunks"
+  batch_size: 500
+
+# Cache Configuration
+cache:
+  enabled: true
+  dir: "/data/cache"
+  models_dir: "/data/models"
+  lru_size: 5000
+
+# Performance Configuration
+performance:
+  # Worker threads for parallel file processing
+  max_workers: 4
+  # File watcher debounce (seconds)
+  debounce_seconds: 5.0
+
+# Server Configuration
+server:
+  mcp_port: 3333
+
+# Docker Resource Limits
+docker:
+  ollama_memory_limit: "8G"
