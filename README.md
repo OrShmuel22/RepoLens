@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-[![Stars](https://img.shields.io/github/stars/yourusername/RepoLens?style=social)](https://github.com/yourusername/RepoLens)
+[![Stars](https://img.shields.io/github/stars/OrShmuel22/RepoLens?style=social)](https://github.com/OrShmuel22/RepoLens)
 
 [📖 Documentation](#-usage) • [🚀 Quick Start](#-installation) • [💡 Examples](#-use-cases) • [🤝 Contributing](CONTRIBUTING.md)
 
